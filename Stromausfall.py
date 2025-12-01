@@ -30,7 +30,7 @@ def generate_simulated_data(center=(52.5200, 13.4050), num_points=100):
     return routers
 
 # Funktion: Karte erstellen
-def create_map(routers):
+def create_map(routers, center_coord):
     affected_zones = []
     for router in routers:
         nearby = [r for r in routers if geodesic(router["coords"], r["coords"]).meters <= 200]
@@ -38,7 +38,7 @@ def create_map(routers):
         if offline_count / len(nearby) >= 0.5:
             affected_zones.append(router["coords"])
 
-    center_location = routers[0]["coords"] if routers else (52.5200, 13.4050)
+ 
     m = folium.Map(location=center_location, zoom_start=13)
 
     # Heatmap für Offline-Router
@@ -74,7 +74,7 @@ if refresh_button or st.session_state.get("last_postcode") != postcode:
 
 # Karte anzeigen
 with st.spinner("Karte wird erstellt..."):
-    map_obj = create_map(st.session_state.routers)
+    map_obj = create_map(st.session_state.routers, center_coords)
     st_folium(map_obj, width=700, height=500)
 
 st.success(f"✅ Karte für PLZ {postcode} aktualisiert!")
