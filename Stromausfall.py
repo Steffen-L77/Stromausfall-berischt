@@ -1,8 +1,10 @@
 
+import streamlit as st
 import folium
+from folium.plugins import HeatMap
 import requests
 from geopy.distance import geodesic
-from folium.plugins import HeatMap
+from streamlit_folium import st_folium
 import time
 
 # Provider-URLs
