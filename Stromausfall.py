@@ -6,6 +6,17 @@ import random
 from geopy.distance import geodesic
 from streamlit_folium import st_folium
 
+# Einfache Mapping-Tabelle für PLZ -> Koordinaten
+PLZ_COORDS = {
+    "10115": (52.532, 13.384),  # Berlin Mitte
+    "20095": (53.550, 10.000),  # Hamburg
+    "80331": (48.137, 11.575),  # München
+    "45127": (51.455, 7.011),   # Essen
+}
+
+def get_coords_from_postcode(postcode):
+    return PLZ_COORDS.get(postcode, (52.5200, 13.4050))  # Fallback: Berlin
+
 # Funktion zur Generierung von simulierten Router-Daten
 def generate_simulated_data(center=(52.5200, 13.4050), num_points=100):
     routers = []
@@ -48,13 +59,19 @@ st.title("📡 Simulierte Ausfallkarte für Internet-Provider")
 st.write("Heatmap + Cluster-Analyse (≥50% offline im Umkreis von 200m)")
 
 # Sidebar für Einstellungen
+
 st.sidebar.header("Einstellungen")
 num_points = st.sidebar.slider("Anzahl der Router", 50, 500, 100)
+postcode = st.sidebar.text_input("Postleitzahl eingeben", value="10115")  # Beispiel: Berlin
 refresh_button = st.sidebar.button("🔄 Daten neu generieren")
 
+
 # Daten generieren
+
 if refresh_button or "routers" not in st.session_state:
-    st.session_state.routers = generate_simulated_data(num_points=num_points)
+    center_coords = get_coords_from_postcode(postcode)
+    st.session_state.routers = generate_simulated_data(center=center_coords, num_points=num_points)
+
 
 # Karte anzeigen
 with st.spinner("Karte wird erstellt..."):
