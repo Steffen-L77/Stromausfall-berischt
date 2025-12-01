@@ -68,9 +68,13 @@ refresh_button = st.sidebar.button("🔄 Daten neu generieren")
 
 # Daten generieren
 
-if refresh_button or "routers" not in st.session_state:
+
+# Prüfen, ob Button geklickt wurde oder PLZ sich geändert hat
+if refresh_button or st.session_state.get("last_postcode") != postcode:
     center_coords = get_coords_from_postcode(postcode)
     st.session_state.routers = generate_simulated_data(center=center_coords, num_points=num_points)
+    st.session_state.last_postcode = postcode
+
 
 
 # Karte anzeigen
