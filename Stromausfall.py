@@ -5,6 +5,7 @@ from folium.plugins import HeatMap
 import requests
 from geopy.distance import geodesic
 from streamlit_folium import st_folium
+import time
 
 # Provider-URLs
 PROVIDERS = {
@@ -63,11 +64,25 @@ def create_map(routers):
 st.title("📡 Live-Ausfallkarte für Internet-Provider")
 st.write("Heatmap + Cluster-Analyse (≥50% offline im Umkreis von 200m)")
 
+# Automatisches Update-Intervall
+update_interval = st.slider("Automatisches Update-Intervall (Minuten)", 1, 10, 5)
+
+# Session-State für letzte Aktualisierung
+if "last_update" not in st.session_state:
+    st.session_state.last_update = 0
+
 # Button für manuelles Refresh
-if st.button("🔄 Karte aktualisieren"):
-    with st.spinner("Daten werden geladen..."):
-        routers = fetch_data()
-        map_obj = create_map(routers)
-        st_folium(map_obj, width=700, height=500)
-else:
-    st.info("Klicke auf 'Karte aktualisieren', um die neuesten Daten zu laden.")
+if st.button("🔄 Jetzt aktualisieren"):
+    st.session_state.last_update = time.time()
+
+# Prüfen, ob automatisches Update fällig ist
+if time.time() - st.session_state.last_update > update_interval * 60:
+    st.session_state.last_update = time.time()
+
+# Daten laden und Karte anzeigen
+with st.spinner("Daten werden geladen..."):
+    routers = fetch_data()
+    map_obj = create_map(routers)
+    st_folium(map_obj, width=700, height=500)
+
+st.write(f"Letzte Aktualisierung: {time.strftime('%H:%M:%S')}")
