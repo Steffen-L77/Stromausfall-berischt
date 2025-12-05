@@ -35,15 +35,18 @@ def create_map(routers, center_coord):
     for router in routers:
         nearby = [r for r in routers if geodesic(router["coords"], r["coords"]).meters <= 200]
         offline_count = sum(1 for r in nearby if r["status"] == "offline")
-        if offline_count / len(nearby) >= 0.5:
+        if len(nearby) > 0 and offline_count / len(nearby) >= 0.5:
             affected_zones.append(router["coords"])
 
  
-    m = folium.Map(location=center_location, zoom_start=13)
+    m = folium.Map(location=center_coord, zoom_start=13)
 
     # Heatmap für Offline-Router
     heat_data = [r["coords"] for r in routers if r["status"] == "offline"]
+    
+if heat_data:
     HeatMap(heat_data, radius=15, blur=10, max_zoom=10).add_to(m)
+
 
     # Router-Marker
     for router in routers:
@@ -67,14 +70,21 @@ num_points = st.sidebar.slider("Anzahl der Router", 50, 500, 100)
 refresh_button = st.sidebar.button("🔄 Karte aktualisieren")
 
 # Daten generieren bei PLZ-Änderung oder Button-Klick
-if refresh_button or st.session_state.get("last_postcode") != postcode:
+
+if "last_postcode" not in st.session_state:
+    st.session_state.last_postcode = None
+if "routers" not in st.session_state:
+    st.session_state.routers = []
+if "center_coords" not in st.session_state:
+    st.session_state.center_coords = get_coords_from_postcode(postcode)
+
     center_coords = get_coords_from_postcode(postcode)
     st.session_state.routers = generate_simulated_data(center=center_coords, num_points=num_points)
     st.session_state.last_postcode = postcode
 
 # Karte anzeigen
 with st.spinner("Karte wird erstellt..."):
-    map_obj = create_map(st.session_state.routers, center_coords)
+    map_obj = create_map(st.session_state.routers, st.session_state.center_coords)
     st_folium(map_obj, width=700, height=500)
 
 st.success(f"✅ Karte für PLZ {postcode} aktualisiert!")
